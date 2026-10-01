@@ -1,0 +1,12 @@
+*.tfstate*
+.terraform/
+*.tfvars
+!*.tfvars.example
+*.p8
+*.pem
+profiles.yml
+.env
+target/
+dbt_packages/
+__pycache__/
+.venv/
