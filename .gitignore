@@ -19,3 +19,4 @@ dagster_home/
 tmp/
 data/
 dbt_project/.user.yml
+dbt_project/package-lock.concurrent-update-lock
