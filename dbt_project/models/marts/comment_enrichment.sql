@@ -9,24 +9,29 @@
 
 {% if backend == 'cortex' %}
 
-select
-    comment_id,
-    snowflake.cortex.sentiment(comment_text)  as sentiment,
-    snowflake.cortex.classify_text(comment_text, ['data', 'ai', 'career', 'other']):label::string as topic,
-    'cortex'                                  as scored_by,
-    current_timestamp()                       as scored_at
-from {{ ref('stg_comments') }}
-{% if is_incremental() %}
-where comment_id not in (select comment_id from {{ this }})
-{% endif %}
+    select
+        comment_id,
+        'cortex' as scored_by,
+        snowflake.cortex.sentiment(comment_text) as sentiment,
+        snowflake.cortex.classify_text(comment_text, ['data', 'ai', 'career', 'other']):label::string as topic,
+        current_timestamp() as scored_at
+    from {{ ref('stg_comments') }}
+    {% if is_incremental() %}
+        where comment_id not in (select comment_id from {{ this }})
+    {% endif %}
 
 {% else %}
 
-select comment_id, sentiment, topic, scored_by, scored_at
-from {{ source('hn', 'comment_scores') }}
-{% if is_incremental() %}
-where comment_id not in (select comment_id from {{ this }})
-{% endif %}
-qualify row_number() over (partition by comment_id order by scored_at desc) = 1
+    select
+        comment_id,
+        sentiment,
+        topic,
+        scored_by,
+        scored_at
+    from {{ source('hn', 'comment_scores') }}
+    {% if is_incremental() %}
+        where comment_id not in (select comment_id from {{ this }})
+    {% endif %}
+    qualify row_number() over (partition by comment_id order by scored_at desc) = 1
 
 {% endif %}
