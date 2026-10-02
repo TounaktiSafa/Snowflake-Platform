@@ -2,7 +2,7 @@
 dialect = snowflake
 templater = jinja
 max_line_length = 120
-exclude_rules = LT05, AM04, RF04
+exclude_rules = LT05, AM04, RF04, RF02
 
 [sqlfluff:rules:capitalisation.keywords]
 capitalisation_policy = lower

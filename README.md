@@ -47,3 +47,4 @@ See [docs/RUNBOOK.md](docs/RUNBOOK.md).
 cd terraform && terraform destroy
 # then, in Snowflake as ACCOUNTADMIN, run docs/teardown.sql
 ```
+

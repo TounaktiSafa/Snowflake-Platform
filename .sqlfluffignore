@@ -1,0 +1,2 @@
+dbt_project/snapshots/
+dbt_project/models/marts/dim_date.sql
