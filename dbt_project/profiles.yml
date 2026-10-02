@@ -1,0 +1,17 @@
+hn_platform:
+  target: dev
+  outputs:
+    dev: &base
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      private_key_path: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_FILE') }}"
+      role: TRANSFORMER
+      warehouse: WH_PLATFORM
+      database: ANALYTICS
+      schema: "{{ env_var('DBT_SCHEMA', 'dev') }}"
+      query_tag: "{{ env_var('DBT_QUERY_TAG', 'dbt_dev') }}"
+      threads: 4
+    prod:
+      <<: *base
+      schema: analytics

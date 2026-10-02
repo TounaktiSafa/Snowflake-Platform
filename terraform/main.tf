@@ -5,7 +5,10 @@ resource "snowflake_warehouse" "platform" {
   auto_suspend        = 60
   auto_resume         = "true"
   initially_suspended = true
-  resource_monitor    = "RM_PLATFORM"
+
+  lifecycle {
+    ignore_changes = [resource_monitor]
+  }
 }
 
 # ---------- Databases & schemas ----------

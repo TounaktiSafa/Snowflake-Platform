@@ -1,0 +1,8 @@
+-- Run AFTER `terraform destroy` (as ACCOUNTADMIN): removes the manually bootstrapped objects.
+USE ROLE ACCOUNTADMIN;
+ALTER ACCOUNT UNSET RESOURCE_MONITOR;
+DROP RESOURCE MONITOR IF EXISTS ACCOUNT_GUARD;
+DROP RESOURCE MONITOR IF EXISTS RM_PLATFORM;
+DROP USER IF EXISTS TF_USER;
+DROP ROLE IF EXISTS TF_ADMIN;
+-- dbt dev / CI schemas live inside ANALYTICS, so they disappear with the database.

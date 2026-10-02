@@ -1,0 +1,12 @@
+# main venv (.venv): ingestion + dbt + dagster + dashboard
+snowflake-connector-python
+requests
+python-dotenv
+vaderSentiment
+pandas
+dbt-snowflake
+dagster
+dagster-webserver
+dagster-dbt
+streamlit
+sqlfluff

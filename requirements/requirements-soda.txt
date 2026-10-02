@@ -1,0 +1,2 @@
+# separate venv (.venv-soda): Soda Core avoids dependency conflicts with dbt/dagster
+soda-core-snowflake

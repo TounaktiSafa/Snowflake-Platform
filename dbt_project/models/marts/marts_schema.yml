@@ -1,0 +1,41 @@
+version: 2
+models:
+  - name: dim_date
+    columns:
+      - name: date_day
+        tests: [unique, not_null]
+  - name: dim_author
+    columns:
+      - name: author
+        tests: [unique, not_null]
+  - name: dim_story
+    columns:
+      - name: story_id
+        tests: [unique, not_null]
+  - name: fct_comments
+    columns:
+      - name: comment_id
+        tests: [unique, not_null]
+      - name: story_id
+        tests:
+          - relationships:
+              arguments: {to: ref('dim_story'), field: story_id}
+      - name: author
+        tests:
+          - relationships:
+              arguments: {to: ref('dim_author'), field: author}
+      - name: date_day
+        tests:
+          - relationships:
+              arguments: {to: ref('dim_date'), field: date_day}
+  - name: comment_enrichment
+    columns:
+      - name: comment_id
+        tests: [unique, not_null]
+      - name: sentiment
+        tests: [not_null]
+      - name: topic
+        tests:
+          - not_null
+          - accepted_values:
+              arguments: {values: ['data', 'ai', 'career', 'other']}

@@ -1,0 +1,12 @@
+version: 2
+models:
+  - name: stg_stories
+    columns:
+      - name: story_id
+        tests: [unique, not_null]
+  - name: stg_comments
+    columns:
+      - name: comment_id
+        tests: [unique, not_null]
+      - name: story_id
+        tests: [not_null]

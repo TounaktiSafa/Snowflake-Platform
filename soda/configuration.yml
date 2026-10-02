@@ -1,0 +1,9 @@
+data_source hn_raw:
+  type: snowflake
+  account: ${SNOWFLAKE_ACCOUNT}
+  username: ${SNOWFLAKE_USER}
+  private_key_path: ${SNOWFLAKE_PRIVATE_KEY_FILE}
+  role: TRANSFORMER
+  warehouse: ${SNOWFLAKE_WAREHOUSE}
+  database: RAW
+  schema: HN

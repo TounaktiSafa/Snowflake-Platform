@@ -1,0 +1,35 @@
+# Gate run right after ingestion. A failing check blocks every downstream Dagster asset.
+checks for COMMENTS:
+  - row_count > 0
+  - freshness(_LOADED_AT) < 2d
+  - missing_count(_FILE) = 0
+
+  # duplicates inside the most recent load batch (should be zero)
+  - duplicates_in_last_batch = 0:
+      duplicates_in_last_batch query: |
+        SELECT COUNT(*) - COUNT(DISTINCT payload:objectID::string)
+        FROM COMMENTS
+        WHERE _LOADED_AT >= DATEADD('hour', -1, (SELECT MAX(_LOADED_AT) FROM COMMENTS))
+
+  # null rate of a key attribute in the last day (percent)
+  - null_author_pct < 5:
+      null_author_pct query: |
+        SELECT COALESCE(100 * AVG(IFF(payload:author::string IS NULL, 1, 0)), 0)
+        FROM COMMENTS
+        WHERE _LOADED_AT >= DATEADD('day', -1, CURRENT_TIMESTAMP())
+
+  # volume anomaly: rows in the latest load vs average of previous loads (1 = same). Wide band on purpose.
+  - volume_ratio between 0.2 and 5:
+      volume_ratio query: |
+        WITH files AS (
+          SELECT _FILE AS fname, COUNT(*) AS c, MAX(_LOADED_AT) AS t FROM COMMENTS GROUP BY 1
+        ),
+        last AS (SELECT fname, c FROM files ORDER BY t DESC LIMIT 1),
+        prev AS (
+          SELECT AVG(c) AS a, COUNT(*) AS n FROM files WHERE fname <> (SELECT fname FROM last)
+        )
+        SELECT IFF(prev.n < 2, 1, last.c / NULLIF(prev.a, 0)) FROM last, prev
+
+checks for STORIES:
+  - row_count > 0
+  - freshness(_LOADED_AT) < 2d

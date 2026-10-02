@@ -1,0 +1,17 @@
+version: 2
+sources:
+  - name: hn
+    database: RAW
+    schema: HN
+    config:
+      loaded_at_field: _loaded_at
+      freshness:
+        warn_after: {count: 26, period: hour}
+        error_after: {count: 48, period: hour}
+    tables:
+      - name: stories
+      - name: comments
+      - name: comment_scores
+        config:
+          freshness: null      # written by the local scorer; no freshness SLA
+          loaded_at_field: scored_at

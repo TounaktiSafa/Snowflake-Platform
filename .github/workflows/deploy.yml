@@ -1,0 +1,44 @@
+name: Deploy
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  dbt-deploy:
+    runs-on: ubuntu-latest
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_WAREHOUSE: WH_PLATFORM
+      SNOWFLAKE_PRIVATE_KEY_FILE: ${{ github.workspace }}/key.p8
+      DBT_QUERY_TAG: deploy_${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.10", cache: pip }
+      - run: pip install dbt-snowflake
+      - name: write key
+        run: |
+          echo "${{ secrets.SNOWFLAKE_PRIVATE_KEY }}" > key.p8
+          chmod 600 key.p8
+      - name: dbt build --target prod
+        working-directory: dbt_project
+        run: |
+          dbt deps --profiles-dir .
+          dbt source freshness --profiles-dir . --target prod || true
+          dbt build --profiles-dir . --target prod
+      - name: save manifest as state for PR runs
+        run: |
+          mkdir -p prod_state
+          cp dbt_project/target/manifest.json prod_state/
+      - uses: actions/cache/save@v4
+        with:
+          path: prod_state
+          key: dbt-manifest-${{ github.sha }}
+
+  # Terraform apply is intentionally NOT automated: state is local until a remote backend is configured
+  # (see docs/RUNBOOK.md, "Remote state"). CI only runs fmt + validate on PRs.

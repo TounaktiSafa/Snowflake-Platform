@@ -1,0 +1,64 @@
+name: CI
+on:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.event.number }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.10" }
+      - run: pip install sqlfluff
+      - name: sqlfluff lint
+        run: sqlfluff lint dbt_project/models dbt_project/snapshots
+      - uses: hashicorp/setup-terraform@v3
+      - name: terraform fmt / validate
+        working-directory: terraform
+        run: |
+          terraform fmt -check -recursive
+          terraform init -backend=false
+          terraform validate
+
+  dbt-ci:
+    needs: lint
+    runs-on: ubuntu-latest
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_WAREHOUSE: WH_PLATFORM
+      SNOWFLAKE_PRIVATE_KEY_FILE: ${{ github.workspace }}/key.p8
+      DBT_SCHEMA: ci_pr_${{ github.event.number }}
+      DBT_QUERY_TAG: ci_pr_${{ github.event.number }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.10", cache: pip }
+      - run: pip install dbt-snowflake
+      - name: write key
+        run: |
+          echo "${{ secrets.SNOWFLAKE_PRIVATE_KEY }}" > key.p8
+          chmod 600 key.p8
+      - name: restore prod manifest (state for state:modified+)
+        uses: actions/cache/restore@v4
+        with:
+          path: prod_state
+          key: dbt-manifest-none
+          restore-keys: dbt-manifest-
+      - name: dbt build (modified + downstream) into CI schema
+        working-directory: dbt_project
+        run: |
+          dbt deps --profiles-dir .
+          if [ -f ../prod_state/manifest.json ]; then
+            dbt build --profiles-dir . --select state:modified+ --defer --state ../prod_state
+          else
+            dbt build --profiles-dir .
+          fi
+      - name: drop CI schemas
+        if: always()
+        working-directory: dbt_project
+        run: dbt run-operation drop_ci_schemas --profiles-dir .
