@@ -40,8 +40,13 @@ jobs:
         with: { python-version: "3.10", cache: pip }
       - run: pip install dbt-snowflake
       - name: write key
+        env:
+          SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
         run: |
-          echo "${{ secrets.SNOWFLAKE_PRIVATE_KEY }}" > key.p8
+          for v in SNOWFLAKE_ACCOUNT SNOWFLAKE_USER SNOWFLAKE_PRIVATE_KEY; do
+            [ -n "${!v}" ] || { echo "::error::secret $v is empty or missing"; exit 1; }
+          done
+          printf '%s\n' "$SNOWFLAKE_PRIVATE_KEY" | tr -d '\r' > key.p8
           chmod 600 key.p8
       - name: restore prod manifest (state for state:modified+)
         uses: actions/cache/restore@v4
