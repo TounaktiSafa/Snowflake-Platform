@@ -4,9 +4,7 @@ An end-to-end data platform on Snowflake, built the way a real data team would: 
  
 **Stack:** Snowflake · Terraform · Python · dbt · Dagster · Soda · GitHub Actions · Streamlit
  
-![Streamlit dashboard](docs/img/streamlit_dashboard.png)
- 
-![Dagster asset lineage](docs/img/dagster_lineage.png)
+
  
 ## Architecture
  
