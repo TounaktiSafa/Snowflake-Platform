@@ -18,3 +18,4 @@ dbt_project/logs/
 dagster_home/
 tmp/
 data/
+dbt_project/.user.yml
